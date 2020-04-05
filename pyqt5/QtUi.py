@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
-# WARNING! All changes made in this file will be lost!
+import sys
+import json
+import base64
+import time
+import os
+import subprocess
+from urllib.request import urlopen
+from urllib.request import Request
+from urllib.error import URLError
+from urllib.parse import urlencode
 
-
+timer = time.perf_counter
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
 class Ui_MainWindow(object):
@@ -97,8 +105,10 @@ class Ui_MainWindow(object):
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.tableView = QtWidgets.QTableView(self.splitter)
+        self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tableView.setObjectName("tableView")
         self.tableView_2 = QtWidgets.QTableView(self.splitter)
+        self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tableView_2.setObjectName("tableView_2")
         self.gridLayout_2.addWidget(self.splitter, 1, 0, 1, 1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
@@ -118,7 +128,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addWidget(self.begin_pushButton)
         self.gridLayout_2.addLayout(self.horizontalLayout_3, 2, 0, 1, 1)
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setProperty("value", 24)
+        self.progressBar.setProperty("value", 0)
         self.progressBar.setObjectName("progressBar")
         self.gridLayout_2.addWidget(self.progressBar, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -174,7 +184,7 @@ class Ui_MainWindow(object):
         self.connection_button.setToolTip(_translate("MainWindow", "连接至百度智能云"))
         self.connection_button.setStatusTip(_translate("MainWindow", "连接至百度智能云"))
         self.connection_button.setText(_translate("MainWindow", "连接"))
-        self.connection_status_label.setText(_translate("MainWindow", "连接失败"))
+        self.connection_status_label.setText(_translate("MainWindow", "<b>连接失败</b>"))
         self.voice_language_combobox.setToolTip(_translate("MainWindow", "默认选择普通话"))
         self.voice_language_combobox.setStatusTip(_translate("MainWindow", "默认选择普通话"))
         self.voice_language_combobox.setItemText(0, _translate("MainWindow", "普通话"))
@@ -186,18 +196,162 @@ class Ui_MainWindow(object):
         self.tableView.setStatusTip(_translate("MainWindow", "待转换的文件"))
         self.tableView_2.setToolTip(_translate("MainWindow", "转换完的文件及情况"))
         self.tableView_2.setStatusTip(_translate("MainWindow", "转换完的文件及情况"))
-        self.open_input_dir_pushButton.setToolTip(_translate("MainWindow", "打开amr文件的文件夹"))
-        self.open_input_dir_pushButton.setStatusTip(_translate("MainWindow", "打开amr文件的文件夹"))
-        self.open_input_dir_pushButton.setText(_translate("MainWindow", "打开输入文件夹"))
+        self.open_input_dir_pushButton.setToolTip(_translate("MainWindow", "选择 .amr 文件"))
+        self.open_input_dir_pushButton.setStatusTip(_translate("MainWindow", "选择 .amr 文件"))
+        self.open_input_dir_pushButton.setText(_translate("MainWindow", "选择 .amr 文件"))
         self.choose_save_pushButton.setToolTip(_translate("MainWindow", "选择txt文件的保存位置"))
         self.choose_save_pushButton.setStatusTip(_translate("MainWindow", "选择txt文件的保存位置"))
-        self.choose_save_pushButton.setText(_translate("MainWindow", "选择保存位置"))
-        self.begin_pushButton.setToolTip(_translate("MainWindow", "开始转换"))
-        self.begin_pushButton.setStatusTip(_translate("MainWindow", "开始转换"))
-        self.begin_pushButton.setText(_translate("MainWindow", "转换"))
+        self.choose_save_pushButton.setText(_translate("MainWindow", "选择保存位置(默认当前目录)"))
+        self.begin_pushButton.setToolTip(_translate("MainWindow", "开始识别"))
+        self.begin_pushButton.setStatusTip(_translate("MainWindow", "开始识别"))
+        self.begin_pushButton.setText(_translate("MainWindow", "开始识别"))
         self.menu_2.setTitle(_translate("MainWindow", "使用说明"))
         self.menu_3.setTitle(_translate("MainWindow", "关于"))
         self.menu.setTitle(_translate("MainWindow", "捐助"))
         self.menu_4.setTitle(_translate("MainWindow", "反馈"))
         self.menu_5.setTitle(_translate("MainWindow", "官网"))
-        self.action_key.setText(_translate("MainWindow", "添加百度云key"))
+
+
+class wechatasr(QMainWindow, Ui_MainWindow):
+    def __init__(self, parent=None):
+        super(wechatasr, self).__init__(parent)
+        self.setupUi(self)
+        self.token = ''
+        self.secret_key = ''
+        self.api_key = ''
+        self.save_file_path = ''
+        self.save_pcm_path = ''
+        self.files_number = 0
+        self.todofiletable = QStandardItemModel(self.files_number, 3)
+
+
+        self.connection_button.clicked.connect(self.connecttobaidu)
+        self.open_input_dir_pushButton.clicked.connect(self.opendir)
+        self.choose_save_pushButton.clicked.connect(self.choose_save_file)
+        self.begin_pushButton.clicked.connect(self.begin)
+
+    def connecttobaidu(self):
+        self.api_key = self.apikey_edit.text()
+        self.secret_key = self.secretkey_edit.text()
+        if self.api_key == '' or self.secret_key == '':
+            QMessageBox.warning(self, u'连接失败', u"请输入 <b>API Key</b> 和 <b>Secret Key</b>  ")
+        else:
+            status, self.token = self.fetch_token()  # 0是网络连接失败 1是API key错误 2 是成功并返回token
+            if status == 0:
+                self.groupBox.setStyleSheet('background-color:rgb(255, 185, 185);')
+                QMessageBox.warning(self, u'连接失败', u"网络连接失败\n请检查网络是否连接")
+            elif status == 1:
+                self.groupBox.setStyleSheet('background-color:rgb(255, 185, 185);')
+                QMessageBox.warning(self, u'连接失败', u"API Key或Secret Key错误，连接失败")
+            elif status == 2:
+                self.groupBox.setStyleSheet('background-color:rgb(222, 255, 222);')
+                self.connection_status_label.setText('<b>连接成功</b>')
+            else:
+                self.groupBox.setStyleSheet('background-color:rgb(255, 185, 185);')
+                QMessageBox.warning(self, u'连接失败', u"未知错误")
+            #QMessageBox.warning(self, u'连接失败', self.voice_language_combobox.currentText())
+
+    def fetch_token(self):
+        try:
+            SCOPE = 'audio_voice_assistant_get'  # 有此scope表示有asr能力，没有请在网页里勾选，非常旧的应用可能没有
+            TOKEN_URL = 'http://openapi.baidu.com/oauth/2.0/token'
+            API_KEY = self.api_key
+            SECRET_KEY = self.secret_key
+            params = {'grant_type': 'client_credentials',
+                      'client_id': API_KEY,
+                      'client_secret': SECRET_KEY}
+            post_data = urlencode(params)
+            post_data = post_data.encode('utf-8')
+            req = Request(TOKEN_URL, post_data)
+            try:
+                f = urlopen(req)
+                result_str = f.read()
+            except URLError as err:
+                if err.code == 401:
+                    return 1, ''
+                else:
+                    return 0, ' '  # 0是网络连接失败 1是API key错误 2 是成功并返回token
+            result_str = result_str.decode()
+            if len(result_str) == 0:
+                return 0, ' '  # 0是网络连接失败 1是API key错误 2 是成功并返回token
+            result = json.loads(result_str)
+            if ('access_token' in result.keys() and 'scope' in result.keys()):
+                if SCOPE and (not SCOPE in result['scope'].split(' ')):  # SCOPE = False 忽略检查
+                    return 1, ' '
+                return 2, result['access_token']
+            else:
+                return 1, ' '
+                # raise DemoError('MAYBE API_KEY or SECRET_KEY not correct: access_token or scope not found in token response')
+        except:
+            return -1, ' '
+
+    def opendir(self):
+        self.progressBar.setValue(0)
+        timeArray = time.localtime(time.time())
+        time_now = time.strftime("%Y%m%d%H%M%S", timeArray)
+        self.save_file_path = './'+'result_'+time_now+'.txt'
+        self.save_pcm_path='./'+'pcm_'+time_now
+        files, ok1 = QFileDialog.getOpenFileNames(self, "请选择amr文件", "./", "ALL Files (*.*)")
+        if len(files) != 0:
+            self.files_number = len(files)
+            self.todofiletable = QStandardItemModel(self.files_number, 3)
+            self.todofiletable.setHorizontalHeaderLabels(['名称', '修改日期', '大小'])
+            count = 0
+            for todofile in files:
+                finfo = os.stat(todofile)
+                info = QStandardItem(todofile)
+                self.todofiletable.setItem(count, 0, info)
+                timeArray = time.localtime(finfo.st_mtime)
+                nametime = time.strftime("%Y/%m/%d %H:%M:%S", timeArray)
+                info = QStandardItem(nametime)
+                self.todofiletable.setItem(count, 1, info)
+                self.todofiletable.item(count, 1).setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                info = QStandardItem(str(format(finfo.st_size // 8 / 1024, '.1f')) + 'KB')
+                self.todofiletable.setItem(count, 2, info)
+                self.todofiletable.item(count, 2).setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                count += 1
+            self.todofiletable.sort(1, 0)
+            self.tableView.setModel(self.todofiletable)
+            self.tableView.setColumnWidth(0, 200)
+            self.tableView.resizeColumnToContents(1)
+            self.tableView.resizeColumnToContents(2)
+
+    def choose_save_file(self):
+        print(self.save_file_path)
+        timeArray = time.localtime(time.time())
+        time_now = time.strftime("%Y%m%d%H%M%S", timeArray)
+        self.save_file_path, ok2 = QFileDialog.getSaveFileName(self, "文件保存", "./" + "result_" + time_now,
+                                                               "Text Files (*.txt)")
+        if self.save_file_path == '':
+            timeArray = time.localtime(time.time())
+            time_now = time.strftime("%Y%m%d%H%M%S", timeArray)
+            self.save_file_path = './'+'result_'+time_now+'.txt'
+
+    def begin(self):
+        """""
+        if self.token == '':
+            QMessageBox.warning(self, u'识别失败', u"还没有连接至百度智能云")
+        elif self.files_number == 0:
+            QMessageBox.warning(self, u'识别失败', u"还没有添加文件")
+        else:
+        """""
+        try:
+            os.mkdir(self.save_pcm_path)
+        except:
+            QMessageBox.warning(self, u'创建目录失败', u"创建目录失败")
+        else:
+            for i in range(0,self.files_number):
+                commandstring= ' silk_v3_decoder.exe ' + ' "' +\
+                            str(self.todofiletable.item(i,0).text()) + '" ' + \
+                            self.save_pcm_path+'/'+ ' "' + \
+                            str(i+1).zfill(len(str(self.files_number)))+ '_' + \
+                            str(self.todofiletable.item(i,1).text()).replace('/','_').replace(':','_').replace(' ','_')+\
+                            '.pcm' + '" ' + \
+                            ' -Fs_API 16000 '
+                print(commandstring)
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ui = wechatasr()
+    ui.show()
+    sys.exit(app.exec_())

@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>carrt0t2</author>
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>980</width>
+    <height>750</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>100</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(255, 185, 185);</string>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="spacing">
+          <number>30</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="service_choice_radioButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="cursor">
+            <cursorShape>ArrowCursor</cursorShape>
+           </property>
+           <property name="toolTip">
+            <string>目前只支持百度智能云，看需求添加腾讯云、阿里云、华为云等等</string>
+           </property>
+           <property name="statusTip">
+            <string>目前只支持百度智能云，看需求添加腾讯云、阿里云、华为云等等</string>
+           </property>
+           <property name="text">
+            <string>百度智能云</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLabel" name="apikey_label">
+               <property name="toolTip">
+                <string>请填入在百度智能云里申请的应用API Key</string>
+               </property>
+               <property name="statusTip">
+                <string>请填入在百度智能云里申请的应用API Key</string>
+               </property>
+               <property name="text">
+                <string>API Key:    </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="apikey_edit">
+               <property name="toolTip">
+                <string>请填入在百度智能云里申请的应用API Key</string>
+               </property>
+               <property name="statusTip">
+                <string>请填入在百度智能云里申请的应用API Key</string>
+               </property>
+               <property name="placeholderText">
+                <string>请填入在百度智能云里申请的应用API Key</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QLabel" name="secretkey_label">
+               <property name="toolTip">
+                <string>请填入在百度智能云里申请的应用Secret Key</string>
+               </property>
+               <property name="statusTip">
+                <string>请填入在百度智能云里申请的应用Secret Key</string>
+               </property>
+               <property name="text">
+                <string>Secret Key: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="secretkey_edit">
+               <property name="toolTip">
+                <string>请填入在百度智能云里申请的应用Secret Key</string>
+               </property>
+               <property name="statusTip">
+                <string>请填入在百度智能云里申请的应用Secret Key</string>
+               </property>
+               <property name="inputMethodHints">
+                <set>Qt::ImhNone</set>
+               </property>
+               <property name="inputMask">
+                <string/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="echoMode">
+                <enum>QLineEdit::Normal</enum>
+               </property>
+               <property name="placeholderText">
+                <string>请填入在百度智能云里申请的应用Secret Key</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <property name="spacing">
+            <number>20</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="connection_button">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>连接至百度智能云</string>
+             </property>
+             <property name="statusTip">
+              <string>连接至百度智能云</string>
+             </property>
+             <property name="text">
+              <string>连接</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="connection_status_label">
+             <property name="text">
+              <string>连接失败</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="voice_language_combobox">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>默认选择普通话</string>
+             </property>
+             <property name="statusTip">
+              <string>默认选择普通话</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>普通话</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>英语</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>粤语</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>四川话</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>普通话远场</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QTableView" name="tableView">
+       <property name="toolTip">
+        <string>待转换的文件</string>
+       </property>
+       <property name="statusTip">
+        <string>待转换的文件</string>
+       </property>
+      </widget>
+      <widget class="QTableView" name="tableView_2">
+       <property name="toolTip">
+        <string>转换完的文件及情况</string>
+       </property>
+       <property name="statusTip">
+        <string>转换完的文件及情况</string>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <property name="spacing">
+       <number>10</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="open_input_dir_pushButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>打开amr文件的文件夹</string>
+        </property>
+        <property name="statusTip">
+         <string>打开amr文件的文件夹</string>
+        </property>
+        <property name="text">
+         <string>打开输入文件夹</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="choose_save_pushButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>选择txt文件的保存位置</string>
+        </property>
+        <property name="statusTip">
+         <string>选择txt文件的保存位置</string>
+        </property>
+        <property name="text">
+         <string>选择保存位置</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="begin_pushButton">
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>开始转换</string>
+        </property>
+        <property name="statusTip">
+         <string>开始转换</string>
+        </property>
+        <property name="text">
+         <string>转换</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="3" column="0">
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>980</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>使用说明</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>关于</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>捐助</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>反馈</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>官网</string>
+    </property>
+   </widget>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu"/>
+   <addaction name="menu_4"/>
+   <addaction name="menu_5"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_key">
+   <property name="text">
+    <string>添加百度云key</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
