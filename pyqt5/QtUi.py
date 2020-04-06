@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-
+### v0.1
+### 学学玩的，有啥改进地方多提提
 import sys
 import json
 import base64
 import time
 import os
-import subprocess
 from urllib.request import urlopen
 from urllib.request import Request
 from urllib.error import URLError
 from urllib.parse import urlencode
-
 timer = time.perf_counter
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
@@ -202,8 +201,8 @@ class Ui_MainWindow(object):
         self.choose_save_pushButton.setToolTip(_translate("MainWindow", "选择txt文件的保存位置"))
         self.choose_save_pushButton.setStatusTip(_translate("MainWindow", "选择txt文件的保存位置"))
         self.choose_save_pushButton.setText(_translate("MainWindow", "选择保存位置(默认当前目录)"))
-        self.begin_pushButton.setToolTip(_translate("MainWindow", "开始识别"))
-        self.begin_pushButton.setStatusTip(_translate("MainWindow", "开始识别"))
+        self.begin_pushButton.setToolTip(_translate("MainWindow", "开始识别,程序还不完善,在运行过程中可能假死,请耐心等待"))
+        self.begin_pushButton.setStatusTip(_translate("MainWindow", "开始识别,程序还不完善,在运行过程中可能假死,请耐心等待"))
         self.begin_pushButton.setText(_translate("MainWindow", "开始识别"))
         self.menu_2.setTitle(_translate("MainWindow", "使用说明"))
         self.menu_3.setTitle(_translate("MainWindow", "关于"))
@@ -329,13 +328,12 @@ class wechatasr(QMainWindow, Ui_MainWindow):
             self.save_file_path = './'+'result_'+time_now+'.txt'
 
     def begin(self):
-        """""
         if self.token == '':
             QMessageBox.warning(self, u'识别失败', u"还没有连接至百度智能云")
+            return
         elif self.files_number == 0:
             QMessageBox.warning(self, u'识别失败', u"还没有添加文件")
-        else:
-        """""
+            return
         try:
             os.mkdir(self.save_pcm_path)
         except:
@@ -346,7 +344,11 @@ class wechatasr(QMainWindow, Ui_MainWindow):
         self.tableView_2.setModel(self.changefiletable)
         self.changefiletable.sort(0, 0)
         for i in range(0,self.files_number):
-            time.sleep(1)
+
+            self.progressBar.setValue(int(i/self.files_number*100))
+            QApplication.processEvents()
+            time.sleep(0.3)
+            QApplication.processEvents()
             doing_file=self.save_pcm_path+'/'+  \
                         str(i+1).zfill(len(str(self.files_number)))+ '__' + \
                         str(self.todofiletable.item(i,1).text()).replace('/','_').replace(':','_').replace(' ','_')+'.pcm'
@@ -358,6 +360,7 @@ class wechatasr(QMainWindow, Ui_MainWindow):
             try:
                 res = os.popen(commandstring)
                 result = res.read()
+                QApplication.processEvents()
                 #print(commandstring)
                 #print(result)
             except:
@@ -372,18 +375,84 @@ class wechatasr(QMainWindow, Ui_MainWindow):
                                         str(self.todofiletable.item(i,0).text())+"\n"\
                                         "该文件将跳过"+\
                                         "\n")
-                    info = QStandardItem(doing_file)
+                    info = QStandardItem(doing_file[(doing_file).rfind('/')+1:])
                     self.changefiletable.setItem(i, 0, info)
                     info = QStandardItem('转码失败')
                     self.changefiletable.setItem(i, 1, info)
-                    self.todofiletable.item(i,0).setBackground(QColor(255, 185, 185))
-                    self.todofiletable.item(i,1).setBackground(QColor(255, 185, 185))
+                    self.changefiletable.item(i,0).setBackground(QColor(255, 185, 185))
+                    self.changefiletable .item(i,1).setBackground(QColor(255, 185, 185))
+                    self.tableView_2.resizeColumnToContents(0)
+                    self.tableView_2.resizeColumnToContents(1)
                     continue
-                info = QStandardItem(doing_file)
+                self.tableView_2.resizeColumnToContents(0)
+                self.tableView_2.resizeColumnToContents(1)
+                info = QStandardItem(doing_file[(doing_file).rfind('/')+1:])
                 self.changefiletable.setItem(i, 0, info)
                 info = QStandardItem('正在处理')
                 self.changefiletable.setItem(i, 1, info)
+                status,mess=self.upload_asr(doing_file)
+                if status==2:
+                    info = QStandardItem('识别成功')
+                    self.changefiletable.setItem(i, 1, info)
+                else:
+                    if status==1:
+                        info = QStandardItem('http错误'+mess)
+                    else:
+                        info = QStandardItem('失败')
+                    self.changefiletable.setItem(i, 1, info)
+                    self.changefiletable.item(i,0).setBackground(QColor(255, 185, 185))
+                    self.changefiletable .item(i,1).setBackground(QColor(255, 185, 185))
 
+
+    def upload_asr(self,up_file):
+        FORMAT = 'pcm'  # 文件后缀只支持 pcm/wav/amr 格式，极速版额外支持m4a 格式
+        CUID = 'Carr0t2'
+        RATE = 16000  # 固定值# 采样率
+        DEV_PID = 1537  # 1537 表示识别普通话，使用输入法模型。根据文档填写PID，选择语言及识别模型
+        ASR_URL = 'http://vop.baidu.com/server_api'
+        AUDIO_FILE=up_file
+        speech_data = []
+        with open(AUDIO_FILE, 'rb') as speech_file:
+            speech_data = speech_file.read()
+        length = len(speech_data)
+        if length == 0:
+            QMessageBox.warning(self, u'未知错误', u"未知错误\n请检查"+up_file+"是否有误")
+            return 0,''
+        speech = base64.b64encode(speech_data)
+        speech = str(speech, 'utf-8')
+        params = {'dev_pid': DEV_PID,
+                  'format': FORMAT,
+                  'rate': RATE,
+                  'token': self.token,
+                  'cuid': CUID,
+                  'channel': 1,
+                  'speech': speech,
+                  'len': length
+                  }
+        post_data = json.dumps(params, sort_keys=False)
+        req = Request(ASR_URL, post_data.encode('utf-8'))
+        req.add_header('Content-Type', 'application/json')
+        QApplication.processEvents()
+        try:
+            begin = timer()
+            f = urlopen(req)
+            result_str = f.read()
+            #print ("Request time cost %f" % (timer() - begin))
+        except URLError as err:
+            QMessageBox.warning(self, u'请求错误', u"请求错误\n请尝试重新连接，检查网络，重启软件\n"+'asr http response http code : ' + str(err.code))
+            return 1,str(err.code)
+        result_str = str(result_str, 'utf-8')
+        QApplication.processEvents()
+        with open(self.save_file_path,"a") as of:
+            result_dict=eval(result_str)
+            #result_dict["time"]=name
+            #of.write(str(result_dict)+'\n')
+            of.write('{'+up_file[(up_file).rfind('/')+1:]+'}'+'\n')
+            try:
+                of.write(str(result_dict["result"])[2:-2]+'\n\n')
+            except:
+                of.write('Error'+'\n')
+            return 2,''
 
 
 
