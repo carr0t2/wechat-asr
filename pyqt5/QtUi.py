@@ -15,7 +15,7 @@ timer = time.perf_counter
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem,QColor
 
 
 class Ui_MainWindow(object):
@@ -108,7 +108,7 @@ class Ui_MainWindow(object):
         self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tableView.setObjectName("tableView")
         self.tableView_2 = QtWidgets.QTableView(self.splitter)
-        self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableView_2.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.tableView_2.setObjectName("tableView_2")
         self.gridLayout_2.addWidget(self.splitter, 1, 0, 1, 1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
@@ -222,8 +222,9 @@ class wechatasr(QMainWindow, Ui_MainWindow):
         self.save_file_path = ''
         self.save_pcm_path = ''
         self.files_number = 0
+        self.pcm_files_number = 0
         self.todofiletable = QStandardItemModel(self.files_number, 3)
-
+        self.changefiletable = QStandardItemModel(self.files_number, 2)
 
         self.connection_button.clicked.connect(self.connecttobaidu)
         self.open_input_dir_pushButton.clicked.connect(self.opendir)
@@ -339,16 +340,52 @@ class wechatasr(QMainWindow, Ui_MainWindow):
             os.mkdir(self.save_pcm_path)
         except:
             QMessageBox.warning(self, u'创建目录失败', u"创建目录失败")
-        else:
-            for i in range(0,self.files_number):
-                commandstring= ' silk_v3_decoder.exe ' + ' "' +\
-                            str(self.todofiletable.item(i,0).text()) + '" ' + \
-                            self.save_pcm_path+'/'+ ' "' + \
-                            str(i+1).zfill(len(str(self.files_number)))+ '_' + \
-                            str(self.todofiletable.item(i,1).text()).replace('/','_').replace(':','_').replace(' ','_')+\
-                            '.pcm' + '" ' + \
-                            ' -Fs_API 16000 '
-                print(commandstring)
+            return
+        self.changefiletable = QStandardItemModel(self.files_number, 2)
+        self.changefiletable.setHorizontalHeaderLabels(['名称', '状态'])
+        self.tableView_2.setModel(self.changefiletable)
+        self.changefiletable.sort(0, 0)
+        for i in range(0,self.files_number):
+            time.sleep(1)
+            doing_file=self.save_pcm_path+'/'+  \
+                        str(i+1).zfill(len(str(self.files_number)))+ '__' + \
+                        str(self.todofiletable.item(i,1).text()).replace('/','_').replace(':','_').replace(' ','_')+'.pcm'
+            commandstring= ' silk_v3_decoder.exe ' + ' "' +\
+                        str(self.todofiletable.item(i,0).text()) + '" "' + \
+                        doing_file + \
+                        '" ' + \
+                        ' -Fs_API 16000 '
+            try:
+                res = os.popen(commandstring)
+                result = res.read()
+                #print(commandstring)
+                #print(result)
+            except:
+                QMessageBox.warning(self, u'未知错误', u"未知错误\n请检查<b>silk_v3_decoder.exe</b>\n是否在当前目录下")
+                return
+            if result is None:
+                QMessageBox.warning(self, u'未找到程序', u"未找到程序\n请检查<b>silk_v3_decoder.exe</b>\n是否在当前目录下")
+                return
+            else:
+                if 'Decoding Finished' not in result:
+                    QMessageBox.warning(self, u'音频文件可能出现了错误', u"音频文件可能出现了错误\n请检查文件"+\
+                                        str(self.todofiletable.item(i,0).text())+"\n"\
+                                        "该文件将跳过"+\
+                                        "\n")
+                    info = QStandardItem(doing_file)
+                    self.changefiletable.setItem(i, 0, info)
+                    info = QStandardItem('转码失败')
+                    self.changefiletable.setItem(i, 1, info)
+                    self.todofiletable.item(i,0).setBackground(QColor(255, 185, 185))
+                    self.todofiletable.item(i,1).setBackground(QColor(255, 185, 185))
+                    continue
+                info = QStandardItem(doing_file)
+                self.changefiletable.setItem(i, 0, info)
+                info = QStandardItem('正在处理')
+                self.changefiletable.setItem(i, 1, info)
+
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
