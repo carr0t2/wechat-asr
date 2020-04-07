@@ -132,7 +132,7 @@ class Ui_MainWindow(object):
         self.progressBar.setObjectName("progressBar")
         self.gridLayout_2.addWidget(self.progressBar, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = my_menu(MainWindow)  #重载成自己的menu
+        self.menubar = MyMenu(MainWindow)  #重载成自己的menu
         self.menubar.setGeometry(QtCore.QRect(0, 0, 980, 29))
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -342,12 +342,12 @@ class WechatASR(QMainWindow, Ui_MainWindow):
         elif self.files_number == 0:
             QMessageBox.warning(self, u'识别失败', u"还没有添加文件")
             return
-        self.setDisabled(True)
         try:
             os.mkdir(self.save_pcm_path)
         except:
             QMessageBox.warning(self, u'创建目录失败', u"创建目录失败\n请尝试重新添加文件再识别")
             return
+        self.setDisabled(True)
         self.doing_file_table = QStandardItemModel(self.files_number, 2)
         self.doing_file_table.setHorizontalHeaderLabels(['名称', '状态'])
         self.tableView_2.setModel(self.doing_file_table)
@@ -359,27 +359,30 @@ class WechatASR(QMainWindow, Ui_MainWindow):
                 str(self.todo_file_table.item(i, 1).text()).\
                 replace('/', '_').replace(':', '_').replace(' ', "_") + \
                 '.pcm'
-            command_string = 'silk_v3_decoder ' + ' "' + \
-                             str(self.todo_file_table.item(i, 0).text()) + '" "' + \
-                             doing_file + \
-                             '" ' + \
-                             ' -Fs_API 16000 '
+            command_string = os.getcwd() + '/' \
+                'silk_v3_decoder' + ' "' + \
+                str(self.todo_file_table.item(i, 0).text()) + '" "' + \
+                doing_file + \
+                '" ' + \
+                ' -Fs_API 16000 '
             try:
                 res = os.popen(command_string)
                 result = res.read()
                 QApplication.processEvents()
                 # print(command_string)
-                # print(result)
-            except :
+                print(result)
+            except Exception as e:
                 # print('str(e):\t\t', str(e))
                 # print('repr(e):\t', repr(e))
                 # print('e.message:\t', e.message)
                 # print('traceback.print_exc():'+ traceback.print_exc())
                 # print('traceback.format_exc():\n%s' % traceback.format_exc())
                 QMessageBox.warning(self, u'未知错误', u"未知错误\n请检查silk_v3_decoder.exe\n是否在当前目录下")
+                self.setDisabled(False)
                 return
             if result == '':
                 QMessageBox.warning(self, u'未找到程序', u"未找到程序\n请检查silk_v3_decoder.exe\n是否在当前目录下")
+                self.setDisabled(False)
                 return
             else:
                 info = QStandardItem(doing_file[doing_file.rfind('/') + 1:])
@@ -484,7 +487,7 @@ class WechatASR(QMainWindow, Ui_MainWindow):
             return 2, ''
 
 
-class my_menu(QtWidgets.QMenuBar):
+class MyMenu(QtWidgets.QMenuBar):
 
     def __init__(self, parent=None):
         QtWidgets.QMenuBar.__init__(self)
