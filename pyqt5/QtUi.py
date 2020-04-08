@@ -6,6 +6,7 @@ import json
 import base64
 import time
 import os
+import traceback
 from urllib.request import urlopen
 from urllib.request import Request
 from urllib.error import URLError
@@ -359,8 +360,8 @@ class WechatASR(QMainWindow, Ui_MainWindow):
                 str(self.todo_file_table.item(i, 1).text()).\
                 replace('/', '_').replace(':', '_').replace(' ', "_") + \
                 '.pcm'
-            command_string = os.getcwd() + '/' \
-                'silk_v3_decoder' + ' "' + \
+            command_string = '"' + os.getcwd() + '/' \
+                'silk_v3_decoder.exe"' + ' "' + \
                 str(self.todo_file_table.item(i, 0).text()) + '" "' + \
                 doing_file + \
                 '" ' + \
@@ -370,13 +371,13 @@ class WechatASR(QMainWindow, Ui_MainWindow):
                 result = res.read()
                 QApplication.processEvents()
                 # print(command_string)
-                print(result)
             except Exception as e:
-                # print('str(e):\t\t', str(e))
-                # print('repr(e):\t', repr(e))
-                # print('e.message:\t', e.message)
-                # print('traceback.print_exc():'+ traceback.print_exc())
-                # print('traceback.format_exc():\n%s' % traceback.format_exc())
+                print(command_string)
+                print('str(e):\t\t', str(e))
+                print('repr(e):\t', repr(e))
+                print('e.message:\t', e.message)
+                print('traceback.print_exc():'+ traceback.print_exc())
+                print('traceback.format_exc():\n%s' % traceback.format_exc())
                 QMessageBox.warning(self, u'未知错误', u"未知错误\n请检查silk_v3_decoder.exe\n是否在当前目录下")
                 self.setDisabled(False)
                 return
@@ -407,6 +408,7 @@ class WechatASR(QMainWindow, Ui_MainWindow):
                 if status == 2:
                     info = QStandardItem('识别成功')
                     self.doing_file_table.setItem(i, 1, info)
+                    print("成功"+doing_file)
                 else:
                     if status == 1:
                         info = QStandardItem('http错误' + mess)
@@ -468,6 +470,7 @@ class WechatASR(QMainWindow, Ui_MainWindow):
             result_str = f.read()
             # print ("Request time cost %f" % (timer() - begin))
         except URLError as err:
+            print(result_str)
             QMessageBox.warning(self, u'请求错误',
                                 u"请求错误\n请尝试重新连接，检查网络，重启软件\n" +
                                 'asr http response http code : ' +
