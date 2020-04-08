@@ -1,6 +1,7 @@
 # wechat-asr
 微信语音批量转文字 python编写 用百度智能云短语音识别API实现 windows下的使用
 
+## 下载请前往 https://github.com/carr0t2/wechat-asr/releases
 ## 简介
 将微信接受的语音文件，转码并识别
 
